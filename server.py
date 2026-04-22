@@ -14,9 +14,6 @@ app.secret_key = "secret123"
 
 socketio = SocketIO(app, async_mode='threading')
 
-@app.route("/")
-def index():
-    return render_template("index.html")
 
 USERNAME = "aero"
 PASSWORD = "smis"
