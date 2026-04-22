@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chat</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+}
+
+/* HEADER */
+.header {
+    background: #1e293b;
+    padding: 12px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* CHAT */
+#chat {
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* MESSAGES */
+.message {
+    max-width: 80%;
+    padding: 12px;
+    margin: 4px;
+    border-radius: 15px;
+    font-size: 15px;
+}
+
+.me {
+    align-self: flex-end;
+    background: #3b82f6;
+}
+
+.other {
+    align-self: flex-start;
+    background: #334155;
+}
+
+/* INPUT BAR (style WhatsApp) */
+.input-bar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    background: #1e293b;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+#msg {
+    flex: 1;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 16px;
+    outline: none;
+}
+
+button {
+    margin-left: 5px;
+    padding: 12px;
+    border-radius: 50%;
+    border: none;
+    background: #22c55e;
+    color: white;
+    font-size: 16px;
+}
+
+/* NAME POPUP (une seule fois) */
+#nameBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000cc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#nameBox input {
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">💬 Chat</div>
+<div id="status">🟢 0 en ligne</div>
+
+<div id="chat"></div>
+
+<div class="input-bar">
+    <input id="msg" placeholder="Message...">
+    <button onclick="send()">➤</button>
+</div>
+
+<!-- Demande du nom UNE FOIS -->
+<div id="nameBox">
+    <input id="nameInput" placeholder="Ton nom..." onkeypress="if(event.key==='Enter') setName()">
+</div>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+<script>
+var socket = io();
+var chat = document.getElementById("chat");
+var username = "";
+
+/* SET NAME */
+function setName(){
+    username = document.getElementById("nameInput").value;
+    if(username.trim() !== ""){
+        document.getElementById("nameBox").style.display = "none";
+    }
+}
+
+/* SEND */
+function send(){
+    let msg = document.getElementById("msg").value;
+    if(msg.trim() === "" || username === "") return;
+
+    socket.send(username + "|" + msg);
+    document.getElementById("msg").value = "";
+}
+
+/* RECEIVE */
+socket.on("message", function(data){
+socket.on("users", function(userList){
+    console.log("USERS:", userList);
+
+    let status = document.getElementById("status");
+    if(status){
+        status.innerHTML = "🟢 " + userList.length + " en ligne<br>" + userList.join(", ");
+    }
+});
+    let parts = data.split("|");
+    let name = parts[0];
+    let msg = parts[1];
+
+    let div = document.createElement("div");
+    div.classList.add("message");
+
+    if(name === username){
+        div.classList.add("me");
+    } else {
+        div.classList.add("other");
+    }
+
+    div.innerHTML = "<b>" + name + ":</b> " + msg;
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+});
+</script>
+
+</body>
+</html>
