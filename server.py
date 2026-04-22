@@ -14,7 +14,7 @@ app.secret_key = "secret123"
 
 socketio = SocketIO(app, async_mode='threading')
 
-users_db = {
+users_db = { 
     "Aero": "7462",
     "Astrolex": "6700",
     "Lepro2.0": "67",
@@ -22,7 +22,7 @@ users_db = {
 }
 
 @app.route("/", methods=["GET", "POST"])
-def login():
+def login(): 
     if request.method == "POST":
         user = request.form.get("username")
         pwd = request.form.get("password")
@@ -30,13 +30,13 @@ def login():
         print("USER:", user)
         print("PASS:", pwd)
 
-if user in users_db and users_db[user] == pwd:
-    print("LOGIN OK")
-    session["logged_in"] = True
-    session["user"] = user   # 👈 IMPORTANT
-    return redirect("/chat")
-else:
-    print("LOGIN FAIL")
+        if user in users_db and users_db[user] == pwd:
+            print("LOGIN OK")
+            session["logged_in"] = True
+            session["user"] = user
+            return redirect("/chat")
+        else:
+            print("LOGIN FAIL")
 
     return render_template("login.html")
 
