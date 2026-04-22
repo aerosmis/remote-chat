@@ -139,20 +139,18 @@ function send(){
     let msg = document.getElementById("msg").value;
     if(msg.trim() === "" || username === "") return;
 
-    socket.send(username + "|" + msg);
+	socket.send(msg);
     document.getElementById("msg").value = "";
 }
 
 /* RECEIVE */
 socket.on("message", function(data){
-socket.on("users", function(userList){
-    console.log("USERS:", userList);
 
-    let status = document.getElementById("status");
-    if(status){
-        status.innerHTML = "🟢 " + userList.length + " en ligne<br>" + userList.join(", ");
-    }
+socket.on('users', function(list){
+    let div = document.getElementById("onlineUsers");
+    div.innerHTML = "🟢 En ligne : " + list.join(", ");
 });
+
     let parts = data.split("|");
     let name = parts[0];
     let msg = parts[1];
