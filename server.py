@@ -30,7 +30,7 @@ def login():
         print("USER:", user)
         print("PASS:", pwd)
 
-	if user in users_db and users_db[user] == pwd:
+if user in users_db and users_db[user] == pwd:
     print("LOGIN OK")
     session["logged_in"] = True
     session["user"] = user   # 👈 IMPORTANT
@@ -48,21 +48,22 @@ def chat():
 
 @socketio.on('message')
 def handle_message(msg):
-    if "|" in msg:
-        name, text = msg.split("|", 1)
+    if not session.get("logged_in"):
+        return
 
-        users[request.sid] = name  # 👈 clé = connexion unique
+    username = session.get("user")
 
-        socketio.emit('users', list(users.values()))
+    users[request.sid] = username
+    socketio.emit('users', list(set(users.values())))  # éviter doublons
 
-    send(msg, broadcast=True)
+    send(username + "|" + msg, broadcast=True)
 
 @socketio.on('disconnect')
 def handle_disconnect():
     if request.sid in users:
-        users.pop(request.sid)
+        del users[request.sid]
 
-    socketio.emit('users', list(users.values()))
+    socketio.emit('users', list(set(users.values())))
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, allow_unsafe_werkzeug=True)
