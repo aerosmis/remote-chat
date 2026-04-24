@@ -1,11 +1,15 @@
 print("=== BON SERVEUR LANCÉ ===")
 
 from flask import request
-users = {}
+from datetime import datetime
+users = []
 
 from flask import Flask, render_template, request, redirect, session
-from flask_socketio import SocketIO, send
+from flask_socketio import SocketIO, send, emit
+import json
 import os
+
+HISTORY_FILE = "messages.json"
 
 print("=== BON SERVEUR LANCÉ ===")
 
@@ -46,24 +50,54 @@ def chat():
         return redirect("/")
     return render_template("index.html")
 
-@socketio.on('message')
+def save_messages(messages):
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(messages, f)
+
+def load_messages():
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    with open(HISTORY_FILE, "r") as f:
+        return json.load(f)
+
+@socketio.on("message")
 def handle_message(msg):
-    if not session.get("logged_in"):
-        return
+    user = session.get("user")
 
-    username = session.get("user")
+    messages = load_messages()
 
-    users[request.sid] = username
-    socketio.emit('users', list(set(users.values()))) 
+    time = datetime.now().strftime("%H:%M")  # 👈 heure
 
-    send(username + "|" + msg, broadcast=True)
+    data = f"{time}|{user}|{msg}"  # 👈 nouveau format
+    messages.append(data)
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    if request.sid in users:
-        del users[request.sid]
+    messages = messages[-100:]
+    save_messages(messages)
 
-    socketio.emit('users', list(set(users.values())))
+    send(data, broadcast=True)
+
+@socketio.on("connect")
+def handle_connect():
+    user = session.get("user")  # 👈 AJOUT
+
+    messages = load_messages()
+    emit("history", messages)
+
+    if user and user not in users:
+        users.append(user)
+
+    socketio.emit("users", users)
+
+@socketio.on("disconnect")
+def disconnect():
+    user = session.get("user")
+
+    if user in users:
+        users.remove(user)
+
+    socketio.emit("users", users)
+
+    
 
 if __name__ == "__main__":
     socketio.run(
