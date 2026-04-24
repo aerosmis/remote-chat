@@ -263,73 +263,170 @@ button:active {
     transform: scale(0.95);
 }
 
+#drawBox {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+
+    padding: 15px;
+    border-radius: 20px;
+
+    display: none;
+    flex-direction: column;
+    align-items: center;
+
+    z-index: 999;
+}
+
+#canvas {
+    background: rgba(255, 255, 255, 0.103);
+    border-radius: 10px;
+    cursor: crosshair;
+}
+
+.draw-controls {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+#drawBox {
+    display: none;
+}
+
+.color-btn {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 50%;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, #375a796b, #2d9aa162);
+    backdrop-filter: blur(10px);
+
+    color: white;
+    font-size: 16px;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    box-shadow: 
+        0 4px 15px rgba(41, 82, 112, 0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* cache input */
+.color-btn input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* hover identique */
+.color-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 
+        0 6px 20px rgba(51, 94, 124, 0.7),
+        inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.chat-img {
+    max-width: 200px;
+    border-radius: 12px;
+    margin-top: 6px;
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    box-shadow: 
+        0 4px 15px rgba(0,0,0,0.3),
+        0 0 10px rgba(255,255,255,0.1);
+}
+
 
 </style>
 </head>
 
-<body>
-
-    <div class="header">
-        FAMILIA - {{ session.user }}
-        <div class="status" id="status">0 en ligne</div>
-    </div>
-
-<style>
-    #onlineUsers {
-        font-size: 12px;
-        color: #67c200;
-        text-align: center;
-        margin-bottom: 5px;
-    }
-    </style>
-
-
+<div class="header">
+    FAMILIA - {{ session.user }}
+    <div class="status" id="status">0 en ligne</div>
+</div>
 
 <div id="chat"></div>
 
-
 <div class="input-bar">
-    <input id="msg" placeholder="Message..." onkeypress="if(event.key==='Enter') send()">
-    <button id="sendBtn" onclick="send()" disabled>➤</button>
+    <button onclick="openDraw()">✎</button>
+    <input id="msg" placeholder="Message...">
+    <button id="sendBtn" disabled>➤</button>
 </div>
 
-<!-- Demande du nom UNE FOIS -->
+<!-- DRAW -->
+<div id="drawBox">
+    <canvas id="canvas" width="300" height="300"></canvas>
+
+    <div class="draw-controls">
+        <label class="color-btn">
+            ✽
+            <input type="color" id="colorPicker">
+        </label>
+    
+        <button onclick="sendDrawing()">➤</button>
+        <button onclick="clearCanvas()">🧽</button>
+        <button onclick="closeDraw()">✖</button>
+    </div>
+</div>
 
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
 <script>
-  var socket = io();
-var chat = document.getElementById("chat");
+let socket = io();
+let chat = document.getElementById("chat");
 
 let input = document.getElementById("msg");
 let btn = document.getElementById("sendBtn");
 
+/* ===== CHAT ===== */
+
 function displayMessage(data){
     let parts = data.split("|");
 
-    let time, name, msg;
-
-    if(parts.length === 3){
-        // nouveau format
-        time = parts[0];
-        name = parts[1];
-        msg = parts[2];
-    } else {
-        // ancien format
-        time = "";
-        name = parts[0];
-        msg = parts[1];
-    }
+    let time = parts.length === 3 ? parts[0] : "";
+    let name = parts.length === 3 ? parts[1] : parts[0];
+    let msg  = parts.length === 3 ? parts[2] : parts[1];
 
     let div = document.createElement("div");
     div.classList.add("message");
 
-    let myName = "{{ session.user }}";
-
-    if(name === myName){
+    if(name === "{{ session.user }}"){
         div.classList.add("me");
     } else {
         div.classList.add("other");
+    }
+
+    div.innerHTML = `
+        <b>${name}</b> <small>${time}</small><br>
+        ${msg}
+    `;
+
+    chat.appendChild(div);
+
+
+if(msg.startsWith("[img]")){
+        let imgData = msg.replace("[img]", "");
+        content = `<img src="${imgData}" class="chat-img">`;
+    } else {
+        content = `<div class="msg-text">${msg}</div>`;
     }
 
     div.innerHTML = `
@@ -337,53 +434,146 @@ function displayMessage(data){
             <span class="name">${name}</span>
             <span class="time">${time}</span>
         </div>
-        <div class="msg-text">${msg}</div>
+        ${content}
     `;
 
     chat.appendChild(div);
-}
 
-/* SEND */
+    }
+
+/* SEND MESSAGE */
 function send(){
     let msg = input.value;
     if(msg.trim() === "") return;
 
     socket.send(msg);
     input.value = "";
-
     btn.disabled = true;
 }
 
-/* ACTIVER BOUTON */
-input.addEventListener("input", function(){
+btn.onclick = send;
+
+input.addEventListener("input", () => {
     btn.disabled = input.value.trim() === "";
 });
 
+input.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") send();
+});
 
-    
-    /* USERS ONLINE */
-    socket.on('users', function(list){
-    document.getElementById("status").innerText = list.length + " en ligne";
-    });
-
-    /* MESSAGE LIVE */
-socket.on("message", function(data){
+/* SOCKET */
+socket.on("message", (data) => {
     displayMessage(data);
     chat.scrollTop = chat.scrollHeight;
 });
 
-/* HISTORIQUE */
-socket.on("history", function(messages){
+socket.on("history", (messages) => {
     chat.innerHTML = "";
-
-    messages.forEach(function(data){
-        displayMessage(data);
-    });
-
-    chat.scrollTop = chat.scrollHeight;
+    messages.forEach(displayMessage);
 });
 
-    </script>
+socket.on("users", (list) => {
+    document.getElementById("status").innerText = list.length + " en ligne";
+});
+
+/* ===== DRAW ===== */
+
+function sendDrawing(){
+    let dataURL = canvas.toDataURL("image/png"); // transparent OK
+
+    socket.emit("image", dataURL);
+
+    clearCanvas();
+    closeDraw();
+}
+
+function openDraw(){
+    document.getElementById("drawBox").style.display = "flex";
+}
+
+function closeDraw(){
+    document.getElementById("drawBox").style.display = "none";
+}
+
+window.onload = function(){
+
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+
+    let colorPicker = document.getElementById("colorPicker");
+    let currentColor = "#000000";
+
+    let drawing = false;
+
+    colorPicker.addEventListener("input", () => {
+        currentColor = colorPicker.value;
+        
+        document.querySelector(".color-btn").style.background = currentColor;
+    });
+
+    /* MOUSE */
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => {
+        drawing = false;
+        ctx.beginPath();
+    });
+    canvas.addEventListener("mousemove", draw);
+
+    /* TOUCH */
+    canvas.addEventListener("touchstart", () => drawing = true);
+    canvas.addEventListener("touchend", () => {
+        drawing = false;
+        ctx.beginPath();
+    });
+    canvas.addEventListener("touchmove", drawTouch);
+
+    function draw(e){
+        if(!drawing) return;
+
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+    }
+
+    function drawTouch(e){
+        if(!drawing) return;
+
+        e.preventDefault();
+
+        let rect = canvas.getBoundingClientRect();
+        let touch = e.touches[0];
+
+        let x = touch.clientX - rect.left;
+        let y = touch.clientY - rect.top;
+
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    window.clearCanvas = function(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    window.sendDrawing = function(){
+        let dataURL = canvas.toDataURL("image/png");
+        socket.emit("image", dataURL);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        closeDraw();
+    }
+};
+</script>
 
 </body>
 </html>

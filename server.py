@@ -2,6 +2,8 @@ print("=== BON SERVEUR LANCÉ ===")
 
 from flask import request
 from datetime import datetime
+from flask_socketio import emit
+
 users = []
 
 from flask import Flask, render_template, request, redirect, session
@@ -10,8 +12,6 @@ import json
 import os
 
 HISTORY_FILE = "messages.json"
-
-print("=== BON SERVEUR LANCÉ ===")
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -75,6 +75,24 @@ def handle_message(msg):
     save_messages(messages)
 
     send(data, broadcast=True)
+
+@socketio.on("image")
+def handle_image(data):
+    user = session.get("user")
+
+    time = datetime.now().strftime("%H:%M")
+
+    messages = load_messages()
+
+    # on ajoute un tag spécial [img]
+    msg = f"{time}|{user}|[img]{data}"
+
+    messages.append(msg)
+    messages = messages[-100:]
+
+    save_messages(messages)
+
+    emit("message", msg, broadcast=True)
 
 @socketio.on("connect")
 def handle_connect():
