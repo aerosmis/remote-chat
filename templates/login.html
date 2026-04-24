@@ -10,16 +10,49 @@
 body {
     margin: 0;
     font-family: Arial;
-    background: #4b0000;
+    background: url("/static/bg4.gif");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    
 }
 
 /* CARD */
 .login-box {
-    background: #1e293b;
+    background: #c28e00;
+     /* léger transparent */
+    background: rgba(255, 255, 255, 0.06);
+    
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    border-radius: 20px;
+    padding: 30px;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    
+    background: linear-gradient(
+        120deg,
+        rgba(255,255,255,0.25),
+        rgba(255,255,255,0.05)
+    );
+    transform: scale(1.02);
+    transition: 0.3s;
+    
+    position: relative;
+    pointer-events: none;
     padding: 30px;
     border-radius: 15px;
     width: 90%;
@@ -29,7 +62,7 @@ body {
 
 /* TITLE */
 .login-box h2 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 /* INPUTS */
@@ -41,6 +74,24 @@ input {
     border: none;
     outline: none;
     font-size: 16px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.205); /* léger transparent */
+    
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    border-radius: 20px;
+    padding: 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    color: white;
+
 }
 
 /* BUTTON */
@@ -50,15 +101,39 @@ button {
     margin-top: 10px;
     border-radius: 10px;
     border: none;
-    background: #22c55e;
-    color: white;
+    background: rgba(255, 255, 255, 0.404); /* léger transparent */
+    
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    border-radius: 20px;
+    padding: 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    color: rgb(0, 0, 0);
     font-size: 16px;
     cursor: pointer;
+    background: rgba(255, 255, 255, 0.295);
+    backdrop-filter: blur(10px);
+    color: white;
+}
+
+.login-box h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    
 }
 
 /* HOVER */
 button:hover {
-    background: #16a34a;
+    background: #ffe600;
 }
 </style>
 </head>
@@ -66,7 +141,7 @@ button:hover {
 <body>
 
 <form method="POST" class="login-box">
-    <h2>🔐 Connexion</h2>
+    <h2>Connexion</h2>
 
     <input type="text" name="username" placeholder="Nom d'utilisateur" required>
     <input type="password" name="password" placeholder="Mot de passe" required>
