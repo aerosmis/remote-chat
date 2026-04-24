@@ -10,7 +10,8 @@ users = []
 from flask import Flask, render_template, request, redirect, session
 from flask_socketio import SocketIO, send, emit
 import json
-import pytz
+from zoneinfo import ZoneInfo
+from datetime import datetime
 import os
 
 HISTORY_FILE = "messages.json"
@@ -71,8 +72,7 @@ def handle_message(msg):
 
     messages = load_messages()
 
-    paris = pytz.timezone("Europe/Paris")
-    time = datetime.now(paris).strftime("%H:%M")
+    time = datetime.now(ZoneInfo("Europe/Paris")).strftime("%H:%M")
 
     data = f"{time}|{user}|{avatar}|{msg}"
 
@@ -87,8 +87,7 @@ def handle_message(msg):
 def handle_image(data):
     user = session.get("user")
 
-    paris = pytz.timezone("Europe/Paris")
-    time = datetime.now(paris).strftime("%H:%M")
+    time = datetime.now(ZoneInfo("Europe/Paris")).strftime("%H:%M")
 
     messages = load_messages()
 
