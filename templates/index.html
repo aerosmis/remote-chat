@@ -112,6 +112,9 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.15);
 
     animation: sendAnim 0.25s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 @keyframes sendAnim {
@@ -354,6 +357,14 @@ button:active {
         0 0 10px rgba(255,255,255,0.1);
 }
 
+.avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    margin-right: 6px;
+
+    box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
 
 </style>
 </head>
@@ -395,15 +406,31 @@ let chat = document.getElementById("chat");
 
 let input = document.getElementById("msg");
 let btn = document.getElementById("sendBtn");
+let myAvatar = "{{ session.avatar }}";
 
 /* ===== CHAT ===== */
 
 function displayMessage(data){
     let parts = data.split("|");
 
-    let time = parts.length === 3 ? parts[0] : "";
-    let name = parts.length === 3 ? parts[1] : parts[0];
-    let msg  = parts.length === 3 ? parts[2] : parts[1];
+    let time, name, avatar, msg;
+
+    if(parts.length === 4){
+        time = parts[0];
+        name = parts[1];
+        avatar = parts[2];
+        msg = parts[3];
+    } else if(parts.length === 3){
+        time = parts[0];
+        name = parts[1];
+        avatar = "default.png";
+        msg = parts[2];
+    } else {
+        time = "";
+        name = parts[0];
+        avatar = "default.png";
+        msg = parts[1];
+    }
 
     let div = document.createElement("div");
     div.classList.add("message");
@@ -414,15 +441,9 @@ function displayMessage(data){
         div.classList.add("other");
     }
 
-    div.innerHTML = `
-        <b>${name}</b> <small>${time}</small><br>
-        ${msg}
-    `;
+    let content;
 
-    chat.appendChild(div);
-
-
-if(msg.startsWith("[img]")){
+    if(msg && msg.startsWith("[img]")){
         let imgData = msg.replace("[img]", "");
         content = `<img src="${imgData}" class="chat-img">`;
     } else {
@@ -431,6 +452,7 @@ if(msg.startsWith("[img]")){
 
     div.innerHTML = `
         <div class="msg-header">
+            <img src="/static/avatars/${avatar}" class="avatar">
             <span class="name">${name}</span>
             <span class="time">${time}</span>
         </div>
@@ -438,8 +460,8 @@ if(msg.startsWith("[img]")){
     `;
 
     chat.appendChild(div);
+}
 
-    }
 
 /* SEND MESSAGE */
 function send(){
