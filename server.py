@@ -54,7 +54,7 @@ def handle_message(msg):
     username = session.get("user")
 
     users[request.sid] = username
-    socketio.emit('users', list(set(users.values())))  # éviter doublons
+    socketio.emit('users', list(set(users.values()))) 
 
     send(username + "|" + msg, broadcast=True)
 
@@ -66,4 +66,10 @@ def handle_disconnect():
     socketio.emit('users', list(set(users.values())))
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=5000,
+        debug=True,
+        allow_unsafe_werkzeug=True 
+    )
