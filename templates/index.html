@@ -54,6 +54,7 @@ body {
     font-size: 16px;
     color: white;
     text-shadow: 0 0 10px rgba(255,255,255,0.4);
+    
 
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(15px) saturate(180%);
@@ -99,22 +100,41 @@ body {
     overflow-x: hidden; /* 👈 enlève la barre chelou */
 }
 
-/* MESSAGES */
-.message {
-    max-width: 70%;
-    padding: 12px;
-    margin: 5px;
-    border-radius: 15px;
-    font-size: 14px;
-
+.msg-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    max-width: 80%;
+    margin: 5px 10px;
+}
+.msg-wrap.me {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+.msg-wrap.other {
+    align-self: flex-start;
+}
+.bubble {
+    padding: 10px 13px;
+    border-radius: 16px;
     backdrop-filter: blur(10px);
     background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-
+    border: 1px solid rgba(255,255,255,0.15);
     animation: sendAnim 0.25s ease;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    word-break: break-word;
+}
+.me .bubble {
+    background: rgba(255,255,255,0.212);
+    box-shadow: 0 0 15px rgba(255,255,255,0.164);
+    border-radius: 16px 4px 16px 16px;
+}
+.bubble-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
 }
 
 @keyframes sendAnim {
@@ -129,17 +149,11 @@ body {
 
 }
 
-.me {
-    align-self: flex-end;
-
-    background: rgba(255, 255, 255, 0.212);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.164);
-
-    align-self: flex-end;
-    background: rgba(255, 255, 255, 0.212);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.164);
-
-    animation: sendRight 0.2s ease;
+.name {
+    font-weight: bold;
+    font-size: 12px;
+    color: white;
+    text-shadow: 0 0 8px rgba(255,255,255,0.6);
 }
 
 @keyframes sendRight {
@@ -154,11 +168,6 @@ body {
 
 }
 
-.other {
-    align-self: flex-start;
-
-    background: rgba(255,255,255,0.1);
-}
 
 /* INPUT BAR (style WhatsApp) */
 .input-bar {
@@ -177,17 +186,10 @@ body {
 
     border-top: 1px solid rgba(255,255,255,0.1);
 }
-
-.name {
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 0 8px rgba(255,255,255,0.6);
-}
-
 .time {
     font-size: 10px;
     opacity: 0.5;
-    margin-left: 8px;
+    white-space: nowrap;
 }
 
 .msg-text {
@@ -195,12 +197,6 @@ body {
     line-height: 1.4;
 }
 
-.msg-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-}
 
 #msg {
     flex: 1;
@@ -358,12 +354,87 @@ button:active {
 }
 
 .avatar {
-    width: 26px;
-    height: 26px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    margin-right: 6px;
+    flex-shrink: 0;
+    
+}
 
-    box-shadow: 0 0 8px rgba(255,255,255,0.4);
+/* ===== REACTIONS ===== */
+.reactions {
+    position: absolute;
+    bottom: -14px;
+    right: 8px;
+    display: flex;
+    gap: 3px;
+    z-index: 5;
+}
+.msg-wrap.other .reactions {
+    right: auto;
+    left: 8px;
+}
+.reaction-badge {
+    background: rgba(30,30,30,0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 2px 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.reaction-badge:hover {
+    transform: scale(1.2);
+}
+.reaction-badge .count {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+}
+
+/* Picker d'emojis */
+.emoji-picker {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20,20,20,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 30px;
+    padding: 8px 12px;
+    display: none;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.emoji-picker.open {
+    display: flex;
+    animation: popIn 0.2s ease;
+}
+@keyframes popIn {
+    from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+    to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+.emoji-picker span {
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.emoji-picker span:hover {
+    transform: scale(1.35);
+}
+
+/* bulle en position relative pour que les reactions se positionnent */
+.bubble {
+    position: relative;
+}
+.msg-wrap {
+    position: relative;
+    margin-bottom: 14px; /* espace pour les reactions */
 }
 
 </style>
@@ -410,57 +481,149 @@ let myAvatar = "{{ session.avatar }}";
 
 /* ===== CHAT ===== */
 
-function displayMessage(data){
+function displayMessage(data) {
     let parts = data.split("|");
-
     let time, name, avatar, msg;
 
-    if(parts.length === 4){
-        time = parts[0];
-        name = parts[1];
-        avatar = parts[2];
-        msg = parts[3];
-    } else if(parts.length === 3){
-        time = parts[0];
-        name = parts[1];
-        avatar = "default.png";
-        msg = parts[2];
+    if (parts.length === 4) {
+        time = parts[0]; name = parts[1]; avatar = parts[2]; msg = parts[3];
+    } else if (parts.length === 3) {
+        time = parts[0]; name = parts[1]; avatar = "default.png"; msg = parts[2];
     } else {
-        time = "";
-        name = parts[0];
-        avatar = "default.png";
-        msg = parts[1];
+        time = ""; name = parts[0]; avatar = "default.png"; msg = parts[1];
     }
 
-    let div = document.createElement("div");
-    div.classList.add("message");
+    // ID unique basé sur le timestamp + nom
+    let msgId = `${time}-${name}`.replace(/[^a-zA-Z0-9-]/g, "");
 
-    if(name === "{{ session.user }}"){
-        div.classList.add("me");
-    } else {
-        div.classList.add("other");
-    }
+    let wrap = document.createElement("div");
+    wrap.classList.add("msg-wrap");
+    wrap.classList.add(name === "{{ session.user }}" ? "me" : "other");
+    wrap.dataset.msgId = msgId;
 
     let content;
-
-    if(msg && msg.startsWith("[img]")){
+    if (msg && msg.startsWith("[img]")) {
         let imgData = msg.replace("[img]", "");
         content = `<img src="${imgData}" class="chat-img">`;
     } else {
         content = `<div class="msg-text">${msg}</div>`;
     }
 
-    div.innerHTML = `
-        <div class="msg-header">
-            <img src="/static/avatars/${avatar}" class="avatar">
-            <span class="name">${name}</span>
-            <span class="time">${time}</span>
+    const EMOJIS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
+
+    wrap.innerHTML = `
+        <img src="/static/avatars/${avatar}" class="avatar">
+        <div class="bubble">
+            <div class="bubble-header">
+                <span class="name">${name}</span>
+                <span class="time">${time}</span>
+            </div>
+            ${content}
+            <div class="emoji-picker" id="picker-${msgId}">
+                ${EMOJIS.map(e => `<span onclick="sendReaction('${msgId}', '${e}')">${e}</span>`).join("")}
+            </div>
+            <div class="reactions" id="reactions-${msgId}"></div>
         </div>
-        ${content}
     `;
 
-    chat.appendChild(div);
+    // Long press
+    let pressTimer;
+    wrap.addEventListener("mousedown", () => {
+        pressTimer = setTimeout(() => togglePicker(msgId), 500);
+    });
+    wrap.addEventListener("mouseup", () => clearTimeout(pressTimer));
+    wrap.addEventListener("touchstart", () => {
+        pressTimer = setTimeout(() => togglePicker(msgId), 500);
+    });
+    wrap.addEventListener("touchend", () => clearTimeout(pressTimer));
+
+    // Double tap
+    let lastTap = 0;
+    wrap.addEventListener("touchend", () => {
+        let now = Date.now();
+        if (now - lastTap < 300) togglePicker(msgId);
+        lastTap = now;
+    });
+    wrap.addEventListener("dblclick", () => togglePicker(msgId));
+
+    chat.appendChild(wrap);
 }
+
+function togglePicker(msgId) {
+    // ferme tous les autres
+    document.querySelectorAll(".emoji-picker").forEach(p => p.classList.remove("open"));
+    let picker = document.getElementById(`picker-${msgId}`);
+    if (picker) picker.classList.toggle("open");
+}
+
+// Ferme le picker si on clique ailleurs
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".bubble")) {
+        document.querySelectorAll(".emoji-picker").forEach(p => p.classList.remove("open"));
+    }
+});
+
+function sendReaction(msgId, emoji) {
+    socket.emit("reaction", { msg_id: msgId, emoji: emoji, user: "{{ session.user }}" });
+    document.querySelectorAll(".emoji-picker").forEach(p => p.classList.remove("open"));
+}
+
+let pendingReactions = null;
+
+socket.on("history", (messages) => {
+    chat.innerHTML = "";
+    messages.forEach(displayMessage);
+    chat.scrollTop = chat.scrollHeight;
+
+    if (pendingReactions) {
+        applyReactions(pendingReactions);
+        pendingReactions = null;
+    }
+});
+
+socket.on("reactions_history", (allReactions) => {
+    let firstBubble = document.querySelector(".bubble");
+    if (firstBubble) {
+        applyReactions(allReactions);
+    } else {
+        pendingReactions = allReactions;
+    }
+});
+
+function applyReactions(allReactions) {
+    for (let msgId in allReactions) {
+        let reactionsDiv = document.getElementById(`reactions-${msgId}`);
+        if (!reactionsDiv) continue;
+        reactionsDiv.innerHTML = "";
+        for (let emoji in allReactions[msgId]) {
+            let count = allReactions[msgId][emoji];
+            let badge = document.createElement("div");
+            badge.classList.add("reaction-badge");
+            badge.dataset.emoji = emoji;
+            badge.innerHTML = `${emoji}<span class="count">${count > 1 ? count : ""}</span>`;
+            badge.onclick = () => sendReaction(msgId, emoji);
+            reactionsDiv.appendChild(badge);
+        }
+    }
+}
+
+socket.on("reaction", (data) => {
+    let reactionsDiv = document.getElementById(`reactions-${data.msg_id}`);
+    if (!reactionsDiv) return;
+
+    let existing = reactionsDiv.querySelector(`[data-emoji="${data.emoji}"]`);
+    if (existing) {
+        let count = parseInt(existing.querySelector(".count").innerText || "1") + 1;
+        existing.querySelector(".count").innerText = count > 1 ? count : "";
+    } else {
+        let badge = document.createElement("div");
+        badge.classList.add("reaction-badge");
+        badge.dataset.emoji = data.emoji;
+        badge.innerHTML = `${data.emoji}<span class="count"></span>`;
+        badge.onclick = () => sendReaction(data.msg_id, data.emoji);
+        reactionsDiv.appendChild(badge);
+    }
+});
 
 
 /* SEND MESSAGE */
